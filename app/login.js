@@ -1,16 +1,18 @@
+import { useNavigation } from "@react-navigation/native";
 import { useState } from "react";
 import {
-    Image,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigation = useNavigation();
 
   return (
     <View style={styles.container}>
@@ -52,9 +54,12 @@ const LoginScreen = () => {
       </View>
 
       {/* Lien Guest */}
-      <View style={styles.guestContainer}>
+      <TouchableOpacity
+        style={styles.guestContainer}
+        onPress={() => navigation.navigate("guest")} // ✅ navigation
+      >
         <Text style={styles.guestLink}>Log in as guest</Text>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 };
