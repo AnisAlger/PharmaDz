@@ -1,17 +1,20 @@
 import { MaterialIcons } from "@expo/vector-icons"; // Material icons (equivalent to "material-symbols-outlined")
+import { useNavigation } from "@react-navigation/native";
+import { router } from "expo-router";
 import {
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    useColorScheme,
-    View,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  View,
 } from "react-native";
 
 const HomeScreen = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const navigation = useNavigation();
 
   return (
     <View
@@ -22,13 +25,16 @@ const HomeScreen = () => {
     >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.iconButton}>
-  <Image
-    source={require("../assets/parametres.png")}
-    style={styles.headerIcon}
-    resizeMode="contain"
-  />
-</TouchableOpacity>
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => router.push("/settings")}
+        >
+          <Image
+            source={require("../assets/parametres.png")}
+            style={styles.headerIcon}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
 
         <Image
           source={{
@@ -163,5 +169,4 @@ const styles = StyleSheet.create({
     height: 40,
     marginRight: 10,
   },
-
 });
