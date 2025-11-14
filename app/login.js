@@ -47,10 +47,11 @@ const LoginScreen = () => {
 
       {/* Lien Sign up */}
       <View style={styles.signupContainer}>
-        <Text style={styles.signupText}>
-          Don't have account?{" "}
-          <Text style={styles.signupLink}>Sign up</Text>
-        </Text>
+         <Text style={styles.signupText}>Don't have account ? </Text>
+
+         <TouchableOpacity onPress={() => navigation.navigate("info")}>
+           <Text style={styles.signupLink}>Sign up</Text>
+         </TouchableOpacity>
       </View>
 
       {/* Lien Guest */}
@@ -112,6 +113,7 @@ const styles = StyleSheet.create({
   signupContainer: {
     marginTop: 25,
     alignItems: "center",
+    flexDirection: "row",
   },
   signupText: {
     fontSize: 14,
