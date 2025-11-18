@@ -6,60 +6,112 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  useColorScheme,
+  View
 } from "react-native";
 
 const LoginScreen = () => {
+  const isDark = useColorScheme() === "dark";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation();
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: isDark ? "#111827" : "#fff" }
+      ]}
+    >
       {/* Logo */}
       <View style={styles.logoContainer}>
         <Image
-          source={require("../assets/ajouter.png")} // <-- mets ton chemin ici
+          source={require("../assets/ajouter.png")}
           style={styles.logoImage}
           resizeMode="contain"
         />
-        <Text style={styles.logoText}>PharmaDz</Text>
+        <Text style={[styles.logoText, { color: isDark ? "#60A5FA" : "#1E90FF" }]}>
+          PharmaDz
+        </Text>
       </View>
 
       {/* Formulaire */}
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            backgroundColor: isDark ? "#1f2937" : "#fff",
+            color: isDark ? "#fff" : "#000",
+            borderColor: isDark ? "#4b5563" : "#ccc"
+          }
+        ]}
         placeholder="Email Address"
+        placeholderTextColor={isDark ? "#9ca3af" : "#777"}
         value={email}
         onChangeText={setEmail}
       />
+
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            backgroundColor: isDark ? "#1f2937" : "#fff",
+            color: isDark ? "#fff" : "#000",
+            borderColor: isDark ? "#4b5563" : "#ccc"
+          }
+        ]}
         placeholder="Password"
         secureTextEntry
+        placeholderTextColor={isDark ? "#9ca3af" : "#777"}
         value={password}
         onChangeText={setPassword}
       />
 
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity
+        style={[
+          styles.button,
+          { backgroundColor: isDark ? "#3b82f6" : "#1E90FF" }
+        ]}
+      >
         <Text style={styles.buttonText}>Log In</Text>
       </TouchableOpacity>
 
       {/* Lien Sign up */}
       <View style={styles.signupContainer}>
-         <Text style={styles.signupText}>Don't have account ? </Text>
+        <Text
+          style={[
+            styles.signupText,
+            { color: isDark ? "#d1d5db" : "#555" }
+          ]}
+        >
+          Don't have account ?
+        </Text>
 
-         <TouchableOpacity onPress={() => navigation.navigate("info")}>
-           <Text style={styles.signupLink}>Sign up</Text>
-         </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("info")}>
+          <Text
+            style={[
+              styles.signupLink,
+              { color: isDark ? "#60A5FA" : "#1E90FF" }
+            ]}
+          >
+            {" "}Sign up
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Lien Guest */}
       <TouchableOpacity
         style={styles.guestContainer}
-        onPress={() => navigation.navigate("guest")} // ✅ navigation
+        onPress={() => navigation.navigate("guest")}
       >
-        <Text style={styles.guestLink}>Log in as guest</Text>
+        <Text
+          style={[
+            styles.guestLink,
+            { color: isDark ? "#60A5FA" : "#1E90FF" }
+          ]}
+        >
+          Log in as guest
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -72,7 +124,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
     padding: 20,
   },
   logoContainer: {
@@ -88,18 +139,15 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#1E90FF",
   },
   input: {
     width: "100%",
     borderWidth: 1,
-    borderColor: "#ccc",
     borderRadius: 20,
     padding: 14,
     marginBottom: 20,
   },
   button: {
-    backgroundColor: "#1E90FF",
     padding: 14,
     borderRadius: 20,
     width: "100%",
@@ -112,15 +160,14 @@ const styles = StyleSheet.create({
   },
   signupContainer: {
     marginTop: 25,
-    alignItems: "center",
     flexDirection: "row",
+    alignItems: "center",
   },
   signupText: {
     fontSize: 14,
-    color: "#555",
   },
   signupLink: {
-    color: "#1E90FF",
+    fontSize: 14,
     fontWeight: "600",
     textDecorationLine: "underline",
   },
@@ -131,7 +178,6 @@ const styles = StyleSheet.create({
   guestLink: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#1E90FF",
     textDecorationLine: "underline",
   },
 });

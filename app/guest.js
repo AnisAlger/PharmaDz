@@ -36,12 +36,17 @@ const HomeScreen = () => {
           />
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => router.push("/EditProfileScreen")}
+        >
         <Image
           source={{
             uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuA-bTbhAmBhp_iFXXZKVmZd4zFuYCPY--wapy8_xLVadv9XMO7tHuztLiMZOZhr_r1tA7adj6MdGvgoweGUre1w-XuLoQKmR2RuT64EH8TGlIzqrNdO1NOfvjEJ74NFn6uHv9nWW6kT_rLCpxY0N3JRh8qMSQLkKzcdPWxwGhTS09mgRZMu6aIwuD6MSUKGuzDiufMGPn5rOxjF6aMTia78w7AN3tvE-2Q6zRmHXFpe_rqbQa4MmHZSSBGaTaBcclYxft2e82HxwXw",
           }}
           style={styles.avatar}
         />
+        </TouchableOpacity>
       </View>
 
       {/* Main */}
@@ -65,7 +70,7 @@ const HomeScreen = () => {
         {/* Buttons grid */}
         <View style={styles.grid}>
           <FeatureButton
-            icon="pill"
+            icon="medication"
             label="Search for a medicine"
             isDark={isDark}
           />

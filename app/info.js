@@ -1,17 +1,19 @@
+import { useNavigation } from "@react-navigation/native";
 import { useState } from "react";
 import {
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    useColorScheme,
-    View
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  useColorScheme,
+  View
 } from "react-native";
 
-export default function RegisterScreen({ navigation }) {
+export default function RegisterScreen() {
   const isDark = useColorScheme() === "dark";
+  const navigation = useNavigation();
 
   const [form, setForm] = useState({
     nationalId: "",
@@ -115,7 +117,8 @@ export default function RegisterScreen({ navigation }) {
 </View>
 
           {/* NEXT BUTTON */}
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity style={styles.button}   
+          onPress={() => navigation.navigate("EmailVerificationScreen")}>
             <Text style={styles.buttonText}>Next</Text>
           </TouchableOpacity>
         </View>
