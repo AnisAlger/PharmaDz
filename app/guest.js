@@ -113,6 +113,7 @@ const styles = StyleSheet.create({
     paddingTop: 40,
   },
   header: {
+    paddingTop: 20,  
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -141,6 +142,7 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 40,
     fontWeight: "bold",
+    marginBottom: 50,
   },
   grid: {
     width: "100%",
@@ -170,6 +172,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   logoImage: {
+    marginBottom: 50,
     width: 40,
     height: 40,
     marginRight: 10,
