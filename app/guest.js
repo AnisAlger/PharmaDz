@@ -1,5 +1,4 @@
-import { MaterialIcons } from "@expo/vector-icons"; // Material icons (equivalent to "material-symbols-outlined")
-import { useNavigation } from "@react-navigation/native";
+import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
   Image,
@@ -14,7 +13,6 @@ import {
 const HomeScreen = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const navigation = useNavigation();
 
   return (
     <View
@@ -40,12 +38,12 @@ const HomeScreen = () => {
           style={styles.iconButton}
           onPress={() => router.push("/EditProfileScreen")}
         >
-        <Image
-          source={{
-            uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuA-bTbhAmBhp_iFXXZKVmZd4zFuYCPY--wapy8_xLVadv9XMO7tHuztLiMZOZhr_r1tA7adj6MdGvgoweGUre1w-XuLoQKmR2RuT64EH8TGlIzqrNdO1NOfvjEJ74NFn6uHv9nWW6kT_rLCpxY0N3JRh8qMSQLkKzcdPWxwGhTS09mgRZMu6aIwuD6MSUKGuzDiufMGPn5rOxjF6aMTia78w7AN3tvE-2Q6zRmHXFpe_rqbQa4MmHZSSBGaTaBcclYxft2e82HxwXw",
-          }}
-          style={styles.avatar}
-        />
+          <Image
+            source={{
+              uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuA-bTbhAmBhp_iFXXZKVmZd4zFuYCPY--wapy8_xLVadv9XMO7tHuztLiMZOZhr_r1tA7adj6MdGvgoweGUre1w-XuLoQKmR2RuT64EH8TGlIzqrNdO1NOfvjEJ74NFn6uHv9nWW6kT_rLCpxY0N3JRh8qMSQLkKzcdPWxwGhTS09mgRZMu6aIwuD6MSUKGuzDiufMGPn5rOxjF6aMTia78w7AN3tvE-2Q6zRmHXFpe_rqbQa4MmHZSSBGaTaBcclYxft2e82HxwXw",
+            }}
+            style={styles.avatar}
+          />
         </TouchableOpacity>
       </View>
 
@@ -58,10 +56,7 @@ const HomeScreen = () => {
             resizeMode="contain"
           />
           <Text
-            style={[
-              styles.logoText,
-              { color: isDark ? "#e5e7eb" : "#1E90FF" },
-            ]}
+            style={[styles.logoText, { color: isDark ? "#e5e7eb" : "#1E90FF" }]}
           >
             PharmaDz
           </Text>
@@ -69,16 +64,21 @@ const HomeScreen = () => {
 
         {/* Buttons grid */}
         <View style={styles.grid}>
+          {/* ✅ Modified to use router.push */}
           <FeatureButton
             icon="medication"
             label="Search for a medicine"
             isDark={isDark}
+            onPress={() => router.push("/medication")}
           />
+
           <FeatureButton
-            icon="map"
+            icon="location-on"
             label="Nearby Pharmacies"
             isDark={isDark}
+            onPress={() => router.push("/nearby-pharmacies")}
           />
+
           <FeatureButton
             icon="upload-file"
             label="Send Prescription"
@@ -91,13 +91,11 @@ const HomeScreen = () => {
   );
 };
 
-const FeatureButton = ({ icon, label, isDark }) => (
+const FeatureButton = ({ icon, label, isDark, onPress }) => (
   <TouchableOpacity
     activeOpacity={0.85}
-    style={[
-      styles.card,
-      { backgroundColor: isDark ? "#2563eb" : "#3b82f6" },
-    ]}
+    style={[styles.card, { backgroundColor: isDark ? "#2563eb" : "#3b82f6" }]}
+    onPress={onPress} // ✅ now triggers router.push
   >
     <MaterialIcons name={icon} size={48} color="#fff" />
     <Text style={styles.cardText}>{label}</Text>
@@ -113,7 +111,7 @@ const styles = StyleSheet.create({
     paddingTop: 40,
   },
   header: {
-    paddingTop: 20,  
+    paddingTop: 20,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
