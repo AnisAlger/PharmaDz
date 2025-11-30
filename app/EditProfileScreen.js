@@ -1,19 +1,28 @@
 import { MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import { router } from "expo-router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    useColorScheme,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  useColorScheme,
+  View,
 } from "react-native";
+import { userApi } from '../services/api';
 
 export default function EditProfileScreen({ navigation }) {
   const isDark = useColorScheme() === "dark";
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [userId, setUserId] = useState(null);
 
   const [form, setForm] = useState({
     firstName: "",
@@ -24,8 +33,88 @@ export default function EditProfileScreen({ navigation }) {
     password: "",
   });
 
+  // Load user data whenever screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        setLoading(true);
+        try {
+          const userJson = await AsyncStorage.getItem('user');
+          console.log('EditProfile - Retrieved user from storage:', userJson);
+          if (userJson) {
+            const user = JSON.parse(userJson);
+            console.log('EditProfile - Parsed user object:', user);
+            setUserId(user._id); // Store user ID for updates
+            setForm({
+              firstName: user.firstName || "",
+              lastName: user.lastName || "",
+              email: user.email || "",
+              birthday: user.birthday || "",
+              phone: user.phone || "",
+              password: "", // Don't load password from storage for security
+            });
+          } else {
+            console.log('EditProfile - No user data found in AsyncStorage');
+          }
+        } catch (e) {
+          console.warn('Failed to load user data', e);
+        } finally {
+          setLoading(false);
+        }
+      })();
+    }, [])
+  );
+
   const updateField = (key, value) => {
-    setForm({ ...form, [key]: value });
+    if (isEditing) {
+      setForm({ ...form, [key]: value });
+    }
+  };
+
+  const handleEditToggle = async () => {
+    if (isEditing) {
+      // User pressed check — save changes to backend
+      if (!userId) {
+        Alert.alert("Error", "User ID not found");
+        return;
+      }
+
+      setSaving(true);
+      try {
+        // Prepare update data (exclude password if empty)
+        const updateData = {
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email,
+          birthday: form.birthday,
+          phone: form.phone,
+        };
+        
+        // Only include password if it was entered
+        if (form.password) {
+          updateData.password = form.password;
+        }
+
+        // Call backend to update user
+        const response = await userApi.updateUser(userId, updateData);
+        console.log('User updated successfully:', response.data);
+
+        // Update AsyncStorage with new user data
+        const updatedUser = response.data.data || response.data;
+        await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+
+        Alert.alert("Success", "Profile updated successfully!");
+        setIsEditing(false);
+      } catch (error) {
+        console.error('Failed to update user:', error);
+        Alert.alert("Error", "Failed to update profile. Please try again.");
+      } finally {
+        setSaving(false);
+      }
+    } else {
+      // User pressed edit — enable editing mode
+      setIsEditing(true);
+    }
   };
 
   return (
@@ -35,10 +124,15 @@ export default function EditProfileScreen({ navigation }) {
         { backgroundColor: isDark ? "#121212" : "#ffffff" },
       ]}
     >
+      {loading ? (
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" color={isDark ? "#3b82f6" : "#3b82f6"} />
+        </View>
+      ) : (
       <ScrollView contentContainerStyle={{ padding: 20 }}>
         {/* HEADER */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.push("/guest")}>
+          <TouchableOpacity onPress={() => router.back()}>
             <MaterialIcons
               name="arrow-back-ios-new"
               size={30}
@@ -51,9 +145,9 @@ export default function EditProfileScreen({ navigation }) {
             Edit Profile
           </Text>
 
-          <TouchableOpacity>
+          <TouchableOpacity onPress={handleEditToggle} disabled={saving}>
             <MaterialIcons
-              name="edit"
+              name={isEditing ? "check" : "edit"}
               size={30}
               color={isDark ? "#3b82f6" : "#3b82f6"}
               paddingTop={50}
@@ -82,30 +176,35 @@ export default function EditProfileScreen({ navigation }) {
             value={form.firstName}
             onChange={(v) => updateField("firstName", v)}
             isDark={isDark}
+            editable={isEditing}
           />
           <Input
             label="Last Name"
             value={form.lastName}
             onChange={(v) => updateField("lastName", v)}
             isDark={isDark}
+            editable={isEditing}
           />
           <Input
             label="Email"
             value={form.email}
             onChange={(v) => updateField("email", v)}
             isDark={isDark}
+            editable={isEditing}
           />
           <Input
             label="Birthday"
             value={form.birthday}
             onChange={(v) => updateField("birthday", v)}
             isDark={isDark}
+            editable={isEditing}
           />
           <Input
             label="Phone Number"
             value={form.phone}
             onChange={(v) => updateField("phone", v)}
             isDark={isDark}
+            editable={isEditing}
           />
           <Input
             label="Password"
@@ -113,15 +212,17 @@ export default function EditProfileScreen({ navigation }) {
             secureTextEntry={true}
             onChange={(v) => updateField("password", v)}
             isDark={isDark}
+            editable={isEditing}
           />
         </View>
       </ScrollView>
+      )}
     </View>
   );
 }
 
 /* COMPONENT INPUT */
-function Input({ label, value, onChange, secureTextEntry, isDark }) {
+function Input({ label, value, onChange, secureTextEntry, isDark, editable }) {
   return (
     <View style={{ marginBottom: 20 }}>
       <Text
@@ -137,12 +238,15 @@ function Input({ label, value, onChange, secureTextEntry, isDark }) {
         value={value}
         onChangeText={onChange}
         secureTextEntry={secureTextEntry}
+        placeholder={label}
+        editable={editable}
         style={[
           styles.input,
           {
-            backgroundColor: isDark ? "#1f2937" : "#f1f5f9",
+            backgroundColor: editable ? (isDark ? "#1f2937" : "#f1f5f9") : (isDark ? "#374151" : "#e5e7eb"),
             borderColor: isDark ? "#4b5563" : "#cbd5e1",
             color: isDark ? "#e5e7eb" : "#374151",
+            opacity: editable ? 1 : 0.6,
           },
         ]}
         placeholderTextColor={isDark ? "#9ca3af" : "#6b7280"}

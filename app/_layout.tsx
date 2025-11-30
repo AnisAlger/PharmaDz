@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
@@ -18,9 +19,11 @@ export default function RootLayout() {
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ headerShown: false }} />
         <Stack.Screen name="info" options={{ headerShown: false }} />
-        <Stack.Screen name="EmailVerificationScreen" options={{ headerShown: false }} />
+        <Stack.Screen name="main" options={{ headerShown: false }} />
         <Stack.Screen name="EditProfileScreen" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="pharmacyDetails" options={{ headerShown: false }} />
+
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
       <StatusBar style="auto" />

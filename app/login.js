@@ -1,6 +1,11 @@
+import { MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from "@react-navigation/native";
+import { router } from 'expo-router';
 import { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Image,
   StyleSheet,
   Text,
@@ -9,12 +14,67 @@ import {
   useColorScheme,
   View
 } from "react-native";
+import { userApi } from '../services/api';
 
 const LoginScreen = () => {
   const isDark = useColorScheme() === "dark";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigation = useNavigation();
+
+  const handleLogin = async () => {
+    // Validate inputs
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter both email and password");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await userApi.login({ email, password });
+      
+      if (response.data.data) {
+        const user = response.data.data;
+        let token = null;
+        try {
+          await AsyncStorage.setItem('user', JSON.stringify(user));
+          token = response?.data?.token || response?.data?.data?.token;
+          if (token) await AsyncStorage.setItem('token', token);
+        } catch (e) {
+          console.warn('Failed saving user to storage', e);
+        }
+        Alert.alert("Success", "Login successful!");
+        // Debug logs: confirm user/token stored and navigation call
+        console.log('LOGIN OK — user:', user, 'token:', token);
+        (async () => {
+          try {
+            const stored = await AsyncStorage.getItem('user');
+            console.log('stored user (from AsyncStorage):', stored);
+          } catch (e) {
+            console.warn('Failed reading stored user for debug', e);
+          }
+        })();
+        // Replace navigation stack with main screen
+        router.replace('main');
+      }
+    } catch (error) {
+      console.error('Login error raw:', error);
+      if (error?.response) {
+        console.error('Response data:', error.response.data);
+        Alert.alert('Login Failed', error.response.data?.error || error.response.data?.message || 'Invalid credentials');
+      } else if (error?.request) {
+        console.error('No response received - request:', error.request);
+        Alert.alert('Network error', 'Unable to reach the server. Check your backend and network connectivity.');
+      } else {
+        console.error('Error message:', error.message);
+        Alert.alert('Error', error.message || 'An unknown error occurred');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View
@@ -49,31 +109,53 @@ const LoginScreen = () => {
         placeholderTextColor={isDark ? "#9ca3af" : "#777"}
         value={email}
         onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
       />
 
-      <TextInput
-        style={[
-          styles.input,
-          {
-            backgroundColor: isDark ? "#1f2937" : "#fff",
-            color: isDark ? "#fff" : "#000",
-            borderColor: isDark ? "#4b5563" : "#ccc"
-          }
-        ]}
-        placeholder="Password"
-        secureTextEntry
-        placeholderTextColor={isDark ? "#9ca3af" : "#777"}
-        value={password}
-        onChangeText={setPassword}
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={[
+            styles.passwordInput,
+            {
+              backgroundColor: isDark ? "#1f2937" : "#fff",
+              color: isDark ? "#fff" : "#000",
+              borderColor: isDark ? "#4b5563" : "#ccc"
+            }
+          ]}
+          placeholder="Password"
+          secureTextEntry={!showPassword}
+          placeholderTextColor={isDark ? "#9ca3af" : "#777"}
+          value={password}
+          onChangeText={setPassword}
+          autoCapitalize="none"
+        />
+        <TouchableOpacity
+          style={styles.passwordToggle}
+          onPress={() => setShowPassword(!showPassword)}
+        >
+          <MaterialIcons
+            name={showPassword ? "visibility" : "visibility-off"}
+            size={24}
+            color={isDark ? "#9ca3af" : "#6b7280"}
+          />
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity
         style={[
           styles.button,
-          { backgroundColor: isDark ? "#3b82f6" : "#1E90FF" }
+          { backgroundColor: isDark ? "#3b82f6" : "#1E90FF" },
+          loading && { opacity: 0.6 }
         ]}
+        onPress={handleLogin}
+        disabled={loading}
       >
-        <Text style={styles.buttonText}>Log In</Text>
+        {loading ? (
+          <ActivityIndicator color="white" size="large" />
+        ) : (
+          <Text style={styles.buttonText}>Log In</Text>
+        )}
       </TouchableOpacity>
 
       {/* Lien Sign up */}
@@ -146,6 +228,25 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 14,
     marginBottom: 20,
+  },
+  passwordContainer: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+    position: "relative",
+  },
+  passwordInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 14,
+    paddingRight: 50,
+  },
+  passwordToggle: {
+    position: "absolute",
+    right: 15,
+    padding: 10,
   },
   button: {
     padding: 14,

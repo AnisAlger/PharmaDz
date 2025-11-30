@@ -1,6 +1,8 @@
 import { useNavigation } from "@react-navigation/native";
 import { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -10,6 +12,7 @@ import {
   useColorScheme,
   View
 } from "react-native";
+import { userApi } from '../services/api';
 
 export default function RegisterScreen() {
   const isDark = useColorScheme() === "dark";
@@ -28,7 +31,51 @@ export default function RegisterScreen() {
   const handleChange = (key, value) => {
     setForm({ ...form, [key]: value });
   };
- const [agree, setAgree] = useState(false);
+  const [agree, setAgree] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSignup = async () => {
+    // Validate form
+    if (!form.nationalId || !form.firstName || !form.lastName || !form.email || !form.phone || !form.password) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    if (!agree) {
+      Alert.alert("Error", "Please agree to the Terms & Privacy Policy");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await userApi.createUser({
+        nationalIdNumber: form.nationalId,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        phone: form.phone,
+        password: form.password,
+      });
+
+      Alert.alert("Success", "Account created successfully!");
+      // Email verification screen removed — go to login
+      navigation.navigate("login");
+    } catch (error) {
+      console.error("Signup error raw:", error);
+      if (error?.response) {
+        console.error('Response data:', error.response.data);
+        Alert.alert('Signup Failed', error.response.data?.error || error.response.data?.message || 'Server returned an error');
+      } else if (error?.request) {
+        console.error('No response received - request:', error.request);
+        Alert.alert('Network error', 'Unable to reach the server. Check your backend and network connectivity.');
+      } else {
+        console.error('Error message:', error.message);
+        Alert.alert('Error', error.message || 'An unknown error occurred');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View
@@ -117,9 +164,16 @@ export default function RegisterScreen() {
 </View>
 
           {/* NEXT BUTTON */}
-          <TouchableOpacity style={styles.button}   
-          onPress={() => navigation.navigate("EmailVerificationScreen")}>
-            <Text style={styles.buttonText}>Next</Text>
+          <TouchableOpacity 
+            style={[styles.button, loading && { opacity: 0.6 }]}
+            onPress={handleSignup}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" size="large" />
+            ) : (
+              <Text style={styles.buttonText}>Next</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>

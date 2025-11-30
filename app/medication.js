@@ -1,27 +1,64 @@
-import React, { useState } from 'react';
-import { View, TextInput, FlatList, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { medicineApi } from '../services/api'; // ✅ adjust path if different
 
 const MedicationScreen = () => {
   const [query, setQuery] = useState('');
-  const suggestions = [
-    'Doliprane',
-    'Doliprane 1000mg',
-    'Doliprane 500mg',
-    'Doliprane Enfant',
-    'Doliprane Sachet 500mg',
-    'Doliprane Suppo',
-  ];
+  const [medicines, setMedicines] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // ✅ Only show suggestions if the query starts with "dol"
-  const filtered = suggestions.filter(item =>
-    query.toLowerCase().startsWith('dol') &&
-    item.toLowerCase().startsWith(query.toLowerCase())
-  );
+  const router = useRouter(); // Expo Router hook
 
+  // -----------------------------
+  //  FETCH MEDICINES FROM BACKEND
+  // -----------------------------
+  const loadMedicines = async () => {
+    try {
+      setLoading(true);
+      const response = await medicineApi.getMedicines();
+      const list = response.data.data || [];
+
+      setMedicines(list);
+      setFiltered(list);
+    } catch (error) {
+      console.log("Error loading medicines:", error?.response?.data || error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMedicines();
+  }, []);
+
+  // -----------------------------------------
+  // FILTER MEDICINES IN REAL TIME AS YOU TYPE
+  // -----------------------------------------
+  useEffect(() => {
+    const q = query.toLowerCase();
+
+    if (!q) {
+      setFiltered(medicines);
+      return;
+    }
+
+    const filteredList = medicines.filter(item =>
+      item.name.toLowerCase().includes(q)
+    );
+
+    setFiltered(filteredList);
+  }, [query, medicines]);
+
+  // -----------------------------
+  // RENDER UI
+  // -----------------------------
   return (
     <View style={styles.container}>
-      {/* Search bar with icon inside white square */}
+      
+      {/* Search bar */}
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -34,13 +71,30 @@ const MedicationScreen = () => {
         </View>
       </View>
 
-      {/* Suggestions list */}
+      {/* Loading spinner */}
+      {loading && (
+        <ActivityIndicator size="large" color="#1E88E5" />
+      )}
+
+      {/* Medicines list */}
       <FlatList
         data={filtered}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.suggestionItem}>
-            <Text style={styles.suggestionText}>{item}</Text>
+          <TouchableOpacity
+            style={styles.suggestionItem}
+            onPress={() => router.push({
+              pathname: '/medicinePharmacies', // new page
+              params: { medicineId: item._id } // pass selected medicine id
+            })}
+          >
+            <Text style={styles.suggestionText}>{item.name}</Text>
+
+            {item.dosage && (
+              <Text style={{ fontSize: 13, color: "#555" }}>
+                {item.dosage}
+              </Text>
+            )}
           </TouchableOpacity>
         )}
         keyboardShouldPersistTaps="handled"
@@ -75,10 +129,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   iconWrapper: {
-    backgroundColor: '#f0f0f0ff',              // ✅ white square background
+    backgroundColor: '#f0f0f0ff',
     width: ICON_BOX_SIZE,
     height: ICON_BOX_SIZE,
-    borderRadius: ICON_BOX_SIZE * 0.2,    // ✅ ~20% rounded corners
+    borderRadius: ICON_BOX_SIZE * 0.2,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,

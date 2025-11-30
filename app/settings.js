@@ -1,7 +1,9 @@
 import { MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from "@react-navigation/native";
 import { router } from "expo-router";
 import {
+  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -44,6 +46,76 @@ const SettingItem = ({ icon, label, color, onPress }) => {
 export default function SettingsScreen({ navigation }) {
   const isDark = useColorScheme() === "dark";
 
+  const handleLogout = async () => {
+    Alert.alert(
+      "Log out",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Log out",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('user');
+              await AsyncStorage.removeItem('token');
+            } catch (e) {
+              console.warn('Error clearing storage during logout', e);
+            }
+            // Replace the navigation stack with login
+            router.replace('/login');
+          },
+        },
+      ],
+    );
+  };
+
+  const handleSecurity = () => {
+    Alert.alert("Security", "Security settings coming soon!");
+  };
+
+  const handleNotification = () => {
+    Alert.alert("Notifications", "Notification preferences coming soon!");
+  };
+
+  const handlePrivacy = () => {
+    Alert.alert("Privacy", "Privacy settings coming soon!");
+  };
+
+  const handleTermsAndPolicy = () => {
+    Alert.alert(
+      "Terms & Privacy Policy",
+      "Our Terms of Service and Privacy Policy are available on our website."
+    );
+  };
+
+  const handleHelpAndSupport = () => {
+    Alert.alert(
+      "Help & Support",
+      "Contact us at support@pharmadz.com or visit our website for more information."
+    );
+  };
+
+  const handleSubscription = () => {
+    Alert.alert("My Subscription", "Subscription management coming soon!");
+  };
+
+  const handleReportProblem = () => {
+    Alert.alert(
+      "Report a Problem",
+      "Please describe the issue and we'll get back to you soon.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Send Report",
+          onPress: () => {
+            Alert.alert("Thank you!", "Your report has been submitted.");
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View
       style={[
@@ -55,7 +127,7 @@ export default function SettingsScreen({ navigation }) {
       <View style={styles.header}>
   <TouchableOpacity
     style={styles.backButton}
-    onPress={() => router.push("/guest")}
+    onPress={() => router.back()}
   >
     <Image
       source={require("../assets/retour.png")}
@@ -83,42 +155,44 @@ export default function SettingsScreen({ navigation }) {
       {/* Content */}
       <ScrollView style={{ flex: 1 }}>
         {/* First Section */}
-        <View
-          style={[
-            styles.section,
-            { backgroundColor: isDark ? "#1e293b" : "#ffffff" },
-          ]}
-        >
-          <SettingItem icon="security" label="Security" />
-          <SettingItem icon="notifications" label="Notification" />
-          <SettingItem icon="lock" label="Privacy" />
-          <SettingItem icon="description" label="Terms & Privacy Policy" />
-        </View>
+<View
+  style={[
+    styles.section,
+    { backgroundColor: isDark ? "#1e293b" : "#ffffff" },
+  ]}
+>
+  <SettingItem icon="security" label="Security" onPress={handleSecurity} />
+  <SettingItem icon="notifications" label="Notification" onPress={handleNotification} />
+  <SettingItem icon="lock" label="Privacy" onPress={handlePrivacy} />
+  <SettingItem icon="description" label="Terms & Privacy Policy" onPress={handleTermsAndPolicy} />
+</View>
 
-        {/* Second Section */}
-        <View
-          style={[
-            styles.section,
-            { backgroundColor: isDark ? "#1e293b" : "#ffffff" },
-          ]}
-        >
-          <SettingItem icon="help" label="Help & Support" />
-          <SettingItem icon="credit-card" label="My Subscription" />
-          <SettingItem icon="flag" label="Report a problem" />
+{/* Second Section */}
+<View
+  style={[
+    styles.section,
+    { backgroundColor: isDark ? "#1e293b" : "#ffffff" },
+  ]}
+>
+  <SettingItem icon="help" label="Help & Support" onPress={handleHelpAndSupport} />
+  <SettingItem icon="credit-card" label="My Subscription" onPress={handleSubscription} />
+  <SettingItem icon="flag" label="Report a problem" onPress={handleReportProblem} />
 
-          <TouchableOpacity
-            style={[
-              styles.item,
-              { backgroundColor: "transparent" },
-            ]}
-            onPress={() => router.push("/login")}
-          >
-            <MaterialIcons name="logout" size={28} color="#ef4444" />
-            <Text style={[styles.itemText, { color: "#ef4444" }]}>
-              Log out
-            </Text>
-          </TouchableOpacity>
-        </View>
+  {/* Leave logout as is (fully functional) */}
+  <TouchableOpacity
+    style={[
+      styles.item,
+      { backgroundColor: "transparent" },
+    ]}
+    onPress={handleLogout}
+  >
+    <MaterialIcons name="logout" size={28} color="#ef4444" />
+    <Text style={[styles.itemText, { color: "#ef4444" }]}>
+      Log out
+    </Text>
+  </TouchableOpacity>
+</View>
+
       </ScrollView>
     </View>
   );
