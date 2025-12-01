@@ -7,13 +7,17 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   useColorScheme,
-  View,
+  View
 } from "react-native";
 import { userApi } from '../services/api';
 
@@ -40,21 +44,17 @@ export default function EditProfileScreen({ navigation }) {
         setLoading(true);
         try {
           const userJson = await AsyncStorage.getItem('user');
-          console.log('EditProfile - Retrieved user from storage:', userJson);
           if (userJson) {
             const user = JSON.parse(userJson);
-            console.log('EditProfile - Parsed user object:', user);
-            setUserId(user._id); // Store user ID for updates
+            setUserId(user._id);
             setForm({
               firstName: user.firstName || "",
               lastName: user.lastName || "",
               email: user.email || "",
               birthday: user.birthday || "",
               phone: user.phone || "",
-              password: "", // Don't load password from storage for security
+              password: "",
             });
-          } else {
-            console.log('EditProfile - No user data found in AsyncStorage');
           }
         } catch (e) {
           console.warn('Failed to load user data', e);
@@ -66,14 +66,11 @@ export default function EditProfileScreen({ navigation }) {
   );
 
   const updateField = (key, value) => {
-    if (isEditing) {
-      setForm({ ...form, [key]: value });
-    }
+    if (isEditing) setForm({ ...form, [key]: value });
   };
 
   const handleEditToggle = async () => {
     if (isEditing) {
-      // User pressed check — save changes to backend
       if (!userId) {
         Alert.alert("Error", "User ID not found");
         return;
@@ -81,7 +78,6 @@ export default function EditProfileScreen({ navigation }) {
 
       setSaving(true);
       try {
-        // Prepare update data (exclude password if empty)
         const updateData = {
           firstName: form.firstName,
           lastName: form.lastName,
@@ -89,17 +85,9 @@ export default function EditProfileScreen({ navigation }) {
           birthday: form.birthday,
           phone: form.phone,
         };
-        
-        // Only include password if it was entered
-        if (form.password) {
-          updateData.password = form.password;
-        }
+        if (form.password) updateData.password = form.password;
 
-        // Call backend to update user
         const response = await userApi.updateUser(userId, updateData);
-        console.log('User updated successfully:', response.data);
-
-        // Update AsyncStorage with new user data
         const updatedUser = response.data.data || response.data;
         await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
 
@@ -112,115 +100,73 @@ export default function EditProfileScreen({ navigation }) {
         setSaving(false);
       }
     } else {
-      // User pressed edit — enable editing mode
       setIsEditing(true);
     }
   };
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: isDark ? "#121212" : "#ffffff" },
-      ]}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
     >
-      {loading ? (
-        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-          <ActivityIndicator size="large" color={isDark ? "#3b82f6" : "#3b82f6"} />
-        </View>
-      ) : (
-      <ScrollView contentContainerStyle={{ padding: 20 }}>
-        {/* HEADER */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <MaterialIcons
-              name="arrow-back-ios-new"
-              size={30}
-              color={isDark ? "#3b82f6" : "#3b82f6"}
-              paddingTop={50}
-            />
-          </TouchableOpacity>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={[styles.container, { backgroundColor: isDark ? "#121212" : "#ffffff" }]}>
+          {loading ? (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+              <ActivityIndicator size="large" color={isDark ? "#3b82f6" : "#3b82f6"} />
+            </View>
+          ) : (
+            <ScrollView contentContainerStyle={{ padding: 20 }} keyboardShouldPersistTaps="handled">
+              {/* HEADER */}
+              <View style={styles.header}>
+                <TouchableOpacity onPress={() => router.back()}>
+                  <MaterialIcons
+                    name="arrow-back-ios-new"
+                    size={30}
+                    color={isDark ? "#3b82f6" : "#3b82f6"}
+                    paddingTop={50}
+                  />
+                </TouchableOpacity>
 
-          <Text style={[styles.title, { color: isDark ? "#fff" : "#111" }]}>
-            Edit Profile
-          </Text>
+                <Text style={[styles.title, { color: isDark ? "#fff" : "#111" }]}>
+                  Edit Profile
+                </Text>
 
-          <TouchableOpacity onPress={handleEditToggle} disabled={saving}>
-            <MaterialIcons
-              name={isEditing ? "check" : "edit"}
-              size={30}
-              color={isDark ? "#3b82f6" : "#3b82f6"}
-              paddingTop={50}
-            />
-          </TouchableOpacity>
-        </View>
+                <TouchableOpacity onPress={handleEditToggle} disabled={saving}>
+                  <MaterialIcons
+                    name={isEditing ? "check" : "edit"}
+                    size={30}
+                    color={isDark ? "#3b82f6" : "#3b82f6"}
+                    paddingTop={50}
+                  />
+                </TouchableOpacity>
+              </View>
 
-        {/* PROFILE IMAGE */}
-        <View style={styles.imageWrapper}>
-          <Image
-            source={{
-              uri:
-                "https://lh3.googleusercontent.com/aida-public/AB6AXuDU6h-q8MrQe0jwBbHsh-o8ndVb8uCs72MWQtF-ZcqVs8KZ1wXPCt_5LAAwIc9AVXZvD03wLuu-TwDZDG1xgzxaW46N_7xWbgJQwBJwZImG3pXdvDwR4qmMzEkgALFR1coTADA5NYSbj5tpzFEPmJm5lhF1fZiaI5CsH_ZJgKSn0r8umYXs96dbT4szmzqQ3veD3ca6n9nt9LGFB7fVIs4sX6QXtKYzce2LvqjhTcGaPLSqDLnTTlt_DlW66FlEXH8BizBCs1r0FvU",
-            }}
-            style={[
-              styles.avatar,
-              { borderColor: isDark ? "#374151" : "#e5e7eb" },
-            ]}
-          />
-        </View>
+              {/* PROFILE IMAGE */}
+              <View style={styles.imageWrapper}>
+                <Image
+                  source={{ uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuDU6h-q8MrQe0jwBbHsh-o8ndVb8uCs72MWQtF-ZcqVs8KZ1wXPCt_5LAAwIc9AVXZvD03wLuu-TwDZDG1xgzxaW46N_7xWbgJQwBJwZImG3pXdvDwR4qmMzEkgALFR1coTADA5NYSbj5tpzFEPmJm5lhF1fZiaI5CsH_ZJgKSn0r8umYXs96dbT4szmzqQ3veD3ca6n9nt9LGFB7fVIs4sX6QXtKYzce2LvqjhTcGaPLSqDLnTTlt_DlW66FlEXH8BizBCs1r0FvU" }}
+                  style={[styles.avatar, { borderColor: isDark ? "#374151" : "#e5e7eb" }]}
+                />
+              </View>
 
-        {/* FORM */}
-        <View style={styles.form}>
-          <Input
-            label="First Name"
-            value={form.firstName}
-            onChange={(v) => updateField("firstName", v)}
-            isDark={isDark}
-            editable={isEditing}
-          />
-          <Input
-            label="Last Name"
-            value={form.lastName}
-            onChange={(v) => updateField("lastName", v)}
-            isDark={isDark}
-            editable={isEditing}
-          />
-          <Input
-            label="Email"
-            value={form.email}
-            onChange={(v) => updateField("email", v)}
-            isDark={isDark}
-            editable={isEditing}
-          />
-          <Input
-            label="Birthday"
-            value={form.birthday}
-            onChange={(v) => updateField("birthday", v)}
-            isDark={isDark}
-            editable={isEditing}
-          />
-          <Input
-            label="Phone Number"
-            value={form.phone}
-            onChange={(v) => updateField("phone", v)}
-            isDark={isDark}
-            editable={isEditing}
-          />
-          <Input
-            label="Password"
-            value={form.password}
-            secureTextEntry={true}
-            onChange={(v) => updateField("password", v)}
-            isDark={isDark}
-            editable={isEditing}
-          />
+              {/* FORM */}
+              <View style={styles.form}>
+                <Input label="First Name" value={form.firstName} onChange={(v) => updateField("firstName", v)} isDark={isDark} editable={isEditing} />
+                <Input label="Last Name" value={form.lastName} onChange={(v) => updateField("lastName", v)} isDark={isDark} editable={isEditing} />
+                <Input label="Email" value={form.email} onChange={(v) => updateField("email", v)} isDark={isDark} editable={isEditing} />
+                <Input label="Birthday" value={form.birthday} onChange={(v) => updateField("birthday", v)} isDark={isDark} editable={isEditing} />
+                <Input label="Phone Number" value={form.phone} onChange={(v) => updateField("phone", v)} isDark={isDark} editable={isEditing} />
+                <Input label="Password" value={form.password} secureTextEntry={true} onChange={(v) => updateField("password", v)} isDark={isDark} editable={isEditing} />
+              </View>
+            </ScrollView>
+          )}
         </View>
-      </ScrollView>
-      )}
-    </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
-
 /* COMPONENT INPUT */
 function Input({ label, value, onChange, secureTextEntry, isDark, editable }) {
   return (
