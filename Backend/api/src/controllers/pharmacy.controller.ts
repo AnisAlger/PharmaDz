@@ -4,15 +4,16 @@ import PharmacyModel from "../models/pharmacy.model";
 import {
   DeletePharmacyInput,
   ReadPharmacyInput,
-  UpdatePharmacyInput
+  UpdatePharmacyInput,
 } from "../schemas/pharmacy.schema";
 import {
   deletePharmacy,
   findPharmacies,
   findPharmacy,
-  updatePharmacy
+  updatePharmacy,
 } from "../services/pharmacy.service";
 
+// Type personnalisé pour gérer les requêtes pharmacie avec options et filtres
 export type PharmacyRequest<
   TParams =
     | ReadPharmacyInput["params"]
@@ -23,22 +24,18 @@ export type PharmacyRequest<
   queryFilter?: FilterQuery<any>;
 };
 
-// ------------ CREATE ------------
-export async function createPharmacyHandler(
-  req: Request,
-  res: Response
-) {
+// ------------ CREATE PHARMACY ------------
+export async function createPharmacyHandler(req: Request, res: Response) {
   try {
     let input = req.body;
 
-    // 🔥 Support du format React Native (location.lat / location.lng)
+    // Support du format React Native { location: { lat, lng } }
     if (input.location) {
       input.latitude = input.location.lat;
       input.longitude = input.location.lng;
       delete input.location;
     }
 
-    // 🔥 Support de liste de pharmacies
     let pharmacies;
     if (Array.isArray(input)) {
       pharmacies = await PharmacyModel.insertMany(input);
@@ -48,12 +45,11 @@ export async function createPharmacyHandler(
 
     return res.status(201).json({ data: pharmacies });
   } catch (error: any) {
-    console.error("Create pharmacy error:", error);
     return res.status(500).json({ error: error.message });
   }
 }
 
-// ------------ UPDATE ------------
+// ------------ UPDATE PHARMACY ------------
 export async function updatePharmacyHandler(
   req: PharmacyRequest<UpdatePharmacyInput["params"]>,
   res: Response
@@ -62,7 +58,6 @@ export async function updatePharmacyHandler(
     const pharmacyId = req.params.pharmacyId;
     let update = req.body;
 
-    // Support mise à jour avec location
     if (update.location) {
       update.latitude = update.location.lat;
       update.longitude = update.location.lng;
@@ -75,12 +70,11 @@ export async function updatePharmacyHandler(
     if (!updated) return res.status(404).json({ error: "Pharmacy not found" });
     return res.status(200).json(updated);
   } catch (error: any) {
-    console.error("Update pharmacy error:", error);
     return res.status(500).json({ error: error.message });
   }
 }
 
-// ------------ GET ONE ------------
+// ------------ GET ONE PHARMACY ------------
 export async function getPharmacyHandler(
   req: PharmacyRequest<ReadPharmacyInput["params"]>,
   res: Response
@@ -93,12 +87,11 @@ export async function getPharmacyHandler(
     if (!pharmacy) return res.status(404).json({ error: "Pharmacy not found" });
     return res.status(200).json(pharmacy);
   } catch (error: any) {
-    console.error("Get pharmacy error:", error);
     return res.status(500).json({ error: error.message });
   }
 }
 
-// ------------ GET ALL ------------
+// ------------ GET ALL PHARMACIES ------------
 export async function getPharmaciesHandler(
   req: PharmacyRequest<{}>,
   res: Response
@@ -110,63 +103,40 @@ export async function getPharmaciesHandler(
 
     return res.status(200).json({ data: pharmacies || [] });
   } catch (error: any) {
-    console.error("Get all pharmacies error:", error);
     return res.status(500).json({ error: error.message });
   }
 }
 
-// ------------ DELETE ------------
+// ------------ DELETE PHARMACY ------------
 export async function deletePharmacyHandler(
-  req: Request<DeletePharmacyInput["params"]>,
+  req: Request<{ pharmacyId: string }>, // typage correct du paramètre
   res: Response
 ) {
   try {
-    console.log("DELETE request received with params:", req.params);
-    console.log("DELETE request received with body:", req.body);
-    
-    // Récupérer l'ID depuis les paramètres
-    const id = req.params.id;
-    
-    console.log("Attempting to delete pharmacy with ID:", id);
-    
+    const id = req.params.pharmacyId; // <-- utiliser pharmacyId ici
+
     if (!id) {
-      console.error("No ID provided for deletion");
       return res.status(400).json({ error: "ID is required" });
     }
 
-    // Vérifier si la pharmacie existe
     const pharmacy = await findPharmacy({ _id: id }, {});
-    
     if (!pharmacy) {
-      console.error("Pharmacy not found with ID:", id);
       return res.status(404).json({ error: "Pharmacy not found" });
     }
 
-    console.log("Pharmacy found:", pharmacy.name);
-    
-    // Supprimer la pharmacie
     const result = await deletePharmacy({ _id: id });
-    
-    console.log("Delete result:", result);
-    
+
     if (result.deletedCount === 0) {
-      console.error("No pharmacy deleted for ID:", id);
-      return res.status(404).json({ error: "Pharmacy not found or already deleted" });
+      return res.status(404).json({ error: "Pharmacy not found" });
     }
 
-    console.log("Pharmacy deleted successfully:", id);
-    
-    return res.status(200).json({ 
-      success: true, 
+    return res.status(200).json({
+      success: true,
       message: "Pharmacy deleted successfully",
-      deletedId: id
     });
   } catch (error: any) {
-    console.error("Delete pharmacy error:", error.message);
-    console.error("Error stack:", error.stack);
-    return res.status(500).json({ 
-      error: "Internal server error", 
-      message: error.message 
-    });
+    console.error("Delete pharmacy error:", error);
+    return res.status(500).json({ error: error.message });
   }
 }
+
