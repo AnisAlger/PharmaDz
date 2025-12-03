@@ -23,6 +23,8 @@ export default function RootLayout() {
         <Stack.Screen name="EditProfileScreen" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="pharmacyDetails" options={{ headerShown: false }} />
+        <Stack.Screen name="AddPharmacyScreen" options={{ headerShown: true }} />
+        <Stack.Screen name="PharmacyListScreen" options={{ headerShown: true }} />
 
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
